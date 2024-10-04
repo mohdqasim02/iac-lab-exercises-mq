@@ -73,3 +73,24 @@ resource "aws_subnet" "subnet6" {
     Name  = format("%s-secure-subnet-2", var.prefix)
   }
 }
+
+resource "aws_internet_gateway" "gateway" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = format("%s-gw", var.prefix)
+  }
+}
+
+resource "aws_eip" "eip" {
+  domain   = "vpc"
+}
+
+resource "aws_nat_gateway" "nat-gw" {
+  allocation_id = aws_eip.eip.id
+  subnet_id     = aws_subnet.subnet2.id
+
+  tags = {
+    Name = format("%s-nat-gw", var.prefix)
+  }
+}
