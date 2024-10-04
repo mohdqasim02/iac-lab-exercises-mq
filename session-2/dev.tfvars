@@ -1,4 +1,6 @@
-region       = "ap-southeast-2"
+region       = "ap-south-1"
+az-1         = "ap-south-1a"
+az-2         = "ap-south-1b"
 prefix       = "mq-iac-lab"
 vpc_cidr     = "192.168.1.0/25"
 subnet1_cidr = "192.168.1.0/28"
