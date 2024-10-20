@@ -8,7 +8,7 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-resource "aws_subnet" "subnet1" {
+resource "aws_subnet" "public_subnet1" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnet1_cidr
   availability_zone = var.az-1
@@ -19,7 +19,7 @@ resource "aws_subnet" "subnet1" {
   }
 }
 
-resource "aws_subnet" "subnet2" {
+resource "aws_subnet" "private_subnet1" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnet2_cidr
   availability_zone = var.az-1
@@ -30,7 +30,7 @@ resource "aws_subnet" "subnet2" {
   }
 }
 
-resource "aws_subnet" "subnet3" {
+resource "aws_subnet" "secure_subnet1" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnet3_cidr
   availability_zone = var.az-1
@@ -41,7 +41,7 @@ resource "aws_subnet" "subnet3" {
   }
 }
 
-resource "aws_subnet" "subnet4" {
+resource "aws_subnet" "public_subnet2" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnet4_cidr
   availability_zone = var.az-2
@@ -52,7 +52,7 @@ resource "aws_subnet" "subnet4" {
   }
 }
 
-resource "aws_subnet" "subnet5" {
+resource "aws_subnet" "private_subnet2" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnet5_cidr
   availability_zone = var.az-2
@@ -63,7 +63,7 @@ resource "aws_subnet" "subnet5" {
   }
 }
 
-resource "aws_subnet" "subnet6" {
+resource "aws_subnet" "secure_subnet2" {
   vpc_id            = aws_vpc.vpc.id
   cidr_block        = var.subnet6_cidr
   availability_zone = var.az-2
@@ -88,7 +88,7 @@ resource "aws_eip" "eip" {
 
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.eip.id
-  subnet_id     = aws_subnet.subnet2.id
+  subnet_id     = aws_subnet.public_subnet2.id
 
   tags = {
     Name = format("%s-nat-gw", var.prefix)
@@ -122,21 +122,21 @@ resource "aws_route_table" "private_route_table" {
 }
 
 resource "aws_route_table_association" "a" {
-  subnet_id      = aws_subnet.subnet1.id
+  subnet_id      = aws_subnet.public_subnet1.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
 resource "aws_route_table_association" "b" {
-  subnet_id      = aws_subnet.subnet4.id
+  subnet_id      = aws_subnet.public_subnet2.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
 resource "aws_route_table_association" "c" {
-  subnet_id      = aws_subnet.subnet2.id
+  subnet_id      = aws_subnet.private_subnet1.id
   route_table_id = aws_route_table.private_route_table.id
 }
 
 resource "aws_route_table_association" "d" {
-  subnet_id      = aws_subnet.subnet5.id
+  subnet_id      = aws_subnet.private_subnet2.id
   route_table_id = aws_route_table.private_route_table.id
 }
