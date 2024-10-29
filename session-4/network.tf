@@ -1,4 +1,4 @@
-resource "aws_vpc" "vpc" {
+resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = "true"
   enable_dns_hostnames = "true"
@@ -9,35 +9,50 @@ resource "aws_vpc" "vpc" {
 }
 
 locals {
-  subnets = tolist([
-    "public_subnet_1",
-    "private_subnet_1",
-    "secure_subnet_1",
-    "public_subnet_2",
-    "private_subnet_2",
-    "secure_subnet_2",
-  ])
-
   azs = tolist([
     var.az-1,
     var.az-2,
   ])
 }
 
-resource "aws_subnet" "subnets" {
-  count             = 6
-  vpc_id            = aws_vpc.vpc.id
+resource "aws_subnet" "public_subnets" {
+  count             = 2
+  vpc_id            = aws_vpc.main.id
   cidr_block        = cidrsubnet(var.vpc_cidr, 3, count.index)
-  availability_zone = element(local.azs, count.index % 2)
+  availability_zone = element(local.azs, count.index)
 
   tags = {
     Group = format("%s-subnet", var.prefix)
-    Name  = format("%s-%s", var.prefix, element(local.subnets, count.index))
+    Name  = format("%s-public-subnet-%s", var.prefix, count.index)
+  }
+}
+
+resource "aws_subnet" "private_subnets" {
+  count             = 2
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(var.vpc_cidr, 3, count.index + 2)
+  availability_zone = element(local.azs, count.index)
+
+  tags = {
+    Group = format("%s-subnet", var.prefix)
+    Name  = format("%s-private-subnet-%s", var.prefix, count.index)
+  }
+}
+
+resource "aws_subnet" "secure_subnets" {
+  count             = 2
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = cidrsubnet(var.vpc_cidr, 3, count.index + 4)
+  availability_zone = element(local.azs, count.index)
+
+  tags = {
+    Group = format("%s-subnet", var.prefix)
+    Name  = format("%s-secure-subnet-%s", var.prefix, count.index)
   }
 }
 
 resource "aws_internet_gateway" "gateway" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = aws_vpc.main.id
 
   tags = {
     Name = format("%s-gw", var.prefix)
@@ -50,7 +65,7 @@ resource "aws_eip" "eip" {
 
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.eip.id
-  subnet_id     = aws_subnet.subnets[0].id
+  subnet_id     = aws_subnet.public_subnets[0].id
 
   tags = {
     Name = format("%s-nat-gw", var.prefix)
@@ -58,7 +73,7 @@ resource "aws_nat_gateway" "nat_gw" {
 }
 
 resource "aws_route_table" "public_route_table" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -71,7 +86,7 @@ resource "aws_route_table" "public_route_table" {
 }
 
 resource "aws_route_table" "private_route_table" {
-  vpc_id = aws_vpc.vpc.id
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -85,12 +100,12 @@ resource "aws_route_table" "private_route_table" {
 
 resource "aws_route_table_association" "public-routes" {
   count          = 2
-  subnet_id      = aws_subnet.subnets[count.index * 3].id
+  subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.public_route_table.id
 }
 
 resource "aws_route_table_association" "private-routes" {
   count          = 2
-  subnet_id      = aws_subnet.subnets[(count.index * 3) + 1].id
+  subnet_id      = aws_subnet.private_subnets[count.index].id
   route_table_id = aws_route_table.private_route_table.id
 }
