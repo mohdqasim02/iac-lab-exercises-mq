@@ -5,8 +5,6 @@ resource "aws_lb" "lb" {
   security_groups    = [aws_security_group.lb_sg.id]
   subnets            = module.vpc.public_subnets
 
-  enable_deletion_protection = true
-
   tags = {
     Name = format("%s-lb", var.prefix)
   }
