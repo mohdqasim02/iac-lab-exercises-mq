@@ -16,10 +16,6 @@ resource "aws_s3_bucket" "my-s3-bucket" {
 
   acl = "private"
 
-  lifecycle {
-    prevent_destroy = true
-  }
-
   tags = {
     Name = format("%s-s3-bucket", var.prefix)
   }
