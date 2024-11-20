@@ -32,4 +32,19 @@ jobs:
         run: |
           aws sts get-caller-identity            
 
-      # Can add extra steps to run Terraform to create the AWS resources
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Setup terraform prerequisites
+        working-directory: session-6/tf_prerequisites
+        run: | 
+          terraform init
+          terraform plan -out="./plan.tfplan"
+          terraform apply "./plan.tfplan"
+          
+      - name: Deploy session 6
+        working-directory: session-6
+        run: |
+          terraform init
+          terraform plan -var-file="./dev.tfvars" -out="./plan.tfplan" 
+          terraform apply "./plan.tfplan"
