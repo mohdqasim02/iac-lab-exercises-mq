@@ -1,6 +1,6 @@
 name: Deploy Infra
 
-on: push
+on: workflow_dispatch
 
 env:
   AWS_REGION: ap-south-1
@@ -34,13 +34,6 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-
-      - name: Setup terraform prerequisites
-        working-directory: session-6/tf_prerequisites
-        run: | 
-          terraform init
-          terraform plan -out="./plan.tfplan"
-          terraform apply "./plan.tfplan"
           
       - name: Deploy session 6
         working-directory: session-6
